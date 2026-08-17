@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <title>领先同行相机</title>
+    <!-- 样式：先加载 desktop.css（基础+遮罩），再加载 mobile.css（相机界面） -->
+    <link rel="stylesheet" href="css/desktop.css">
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+    <!-- ====== 电脑端遮罩层（仅 body.desktop-block 时显示） ====== -->
+    <div id="desktop-overlay" class="desktop-overlay">
+        <div class="desktop-card">
+            <svg class="desktop-card-icon" viewBox="0 0 24 24" width="72" height="72" aria-hidden="true">
+                <path fill="#4285F4" d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+                <circle cx="12" cy="12" r="3.2" fill="#4285F4"/>
+            </svg>
+            <p class="desktop-card-text">由于摄像头支持问题，请在手机端访问</p>
+        </div>
+    </div>
+
+    <!-- ====== 手机端相机界面 ====== -->
+    <div id="camera-app" class="camera-app">
+        <!-- 相机视频流（底层） -->
+        <video id="camera-video" class="camera-video" autoplay playsinline muted></video>
+
+        <!-- 处理用 canvas（隐藏，仅用于截图/锐化/合成） -->
+        <canvas id="process-canvas" class="process-canvas"></canvas>
+
+        <!-- 月亮贴图预览 canvas（覆盖在视频上方，仅月亮模式绘制） -->
+        <canvas id="moon-canvas" class="moon-canvas"></canvas>
+
+        <!-- 九宫格构图线（白色细线，透明度 0.5） -->
+        <div class="grid-overlay" aria-hidden="true">
+            <div class="grid-line grid-vertical v1"></div>
+            <div class="grid-line grid-vertical v2"></div>
+            <div class="grid-line grid-horizontal h1"></div>
+            <div class="grid-line grid-horizontal h2"></div>
+        </div>
+
+        <!-- 顶部参数栏（硬编码纯文字） -->
+        <div class="top-bar">
+            <div class="param-item">
+                <span class="param-label">ISO</span>
+                <span class="param-value">Auto</span>
+            </div>
+            <div class="param-item">
+                <span class="param-label">光圈</span>
+                <span class="param-value">f/0.95</span>
+            </div>
+            <div class="param-item">
+                <span class="param-label">大小</span>
+                <span class="param-value">L</span>
+            </div>
+        </div>
+
+        <!-- 底部控制区：模式切换 + 快门按钮 -->
+        <div class="bottom-bar">
+            <div class="mode-switcher" role="tablist">
+                <button class="mode-btn active" data-mode="auto" role="tab">自动模式</button>
+                <button class="mode-btn" data-mode="moon" role="tab">超级月亮模式</button>
+            </div>
+            <button id="shutter" class="shutter-btn" aria-label="拍摄">
+                <span class="shutter-inner"></span>
+            </button>
+        </div>
+
+        <!-- Toast 提示（用于"未检测到月亮"等提示） -->
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+
+    <!-- 脚本：device-detect 先执行，再加载功能模块，camera.js 最后绑定 -->
+    <script src="js/device-detect.js"></script>
+    <script src="js/sharpen.js"></script>
+    <script src="js/moon-mode.js"></script>
+    <script src="js/camera.js"></script>
+</body>
+</html>
