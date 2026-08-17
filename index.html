@@ -5,11 +5,246 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#000000">
     <title>领先同行相机</title>
-    <!-- 样式：先加载 desktop.css（基础+遮罩），再加载 mobile.css（相机界面） -->
     <link rel="stylesheet" href="css/desktop.css">
     <link rel="stylesheet" href="css/mobile.css">
+
+    <!-- ====== 免责声明弹窗样式（内联，确保最先渲染） ====== -->
+    <style>
+        /* ---------- 弹窗遮罩（红白配色，非纯红） ---------- */
+        .disclaimer-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            box-sizing: border-box;
+            background: linear-gradient(135deg, rgba(183,28,28,0.92), rgba(211,47,47,0.88));
+        }
+        .disclaimer-overlay.hidden { display: none; }
+
+        /* ---------- 弹窗卡片（白色） ---------- */
+        .disclaimer-card {
+            background: #ffffff;
+            border-radius: 14px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 86vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+            border-top: 5px solid #d32f2f;
+        }
+
+        .disclaimer-header {
+            padding: 18px 20px 10px;
+            text-align: center;
+            border-bottom: 1px solid #ffebee;
+        }
+        .disclaimer-title {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 800;
+            color: #d32f2f;
+            letter-spacing: 1px;
+        }
+        .disclaimer-subtitle {
+            margin: 4px 0 0;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .disclaimer-body {
+            padding: 14px 20px;
+            overflow-y: auto;
+            flex: 1;
+            font-size: 13.5px;
+            line-height: 1.75;
+            color: #333;
+        }
+        .disclaimer-body .intro {
+            font-weight: 600;
+            color: #b71c1c;
+            margin: 0 0 10px;
+        }
+        .disclaimer-body h3 {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #d32f2f;
+            margin: 14px 0 6px;
+            padding-bottom: 3px;
+            border-bottom: 1px dashed #ffcdd2;
+        }
+        .disclaimer-body ul {
+            margin: 0 0 6px;
+            padding-left: 18px;
+        }
+        .disclaimer-body li {
+            margin-bottom: 5px;
+        }
+        .disclaimer-body strong { color: #b71c1c; }
+
+        /* ---------- 复选框区域 ---------- */
+        .disclaimer-check {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin: 14px 20px 0;
+            padding: 10px 12px;
+            background: #fff5f5;
+            border: 1px solid #ffcdd2;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .disclaimer-check input {
+            margin-top: 2px;
+            width: 18px;
+            height: 18px;
+            accent-color: #d32f2f;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .disclaimer-check label {
+            font-size: 13.5px;
+            color: #333;
+            cursor: pointer;
+            line-height: 1.5;
+            user-select: none;
+        }
+
+        /* ---------- 按钮区域 ---------- */
+        .disclaimer-buttons {
+            display: flex;
+            gap: 10px;
+            padding: 14px 20px 18px;
+        }
+        .disclaimer-btn {
+            flex: 1;
+            padding: 12px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity .15s, transform .1s;
+        }
+        .disclaimer-btn:active { transform: scale(0.97); }
+        .disclaimer-btn-exit {
+            background: #ffffff;
+            color: #555;
+            border: 1.5px solid #ddd;
+        }
+        .disclaimer-btn-confirm {
+            background: #d32f2f;
+            color: #fff;
+        }
+        .disclaimer-btn-confirm:disabled {
+            background: #e0e0e0;
+            color: #aaa;
+            cursor: not-allowed;
+        }
+
+        /* ---------- 拒绝进入遮罩（全屏不可逆） ---------- */
+        .refused-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: #1a1a1a;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        .refused-overlay.show { display: flex; }
+        .refused-text {
+            color: #ef5350;
+            font-size: 18px;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.7;
+        }
+
+        /* ---------- 拍照页面水印（DOM元素，不写入canvas） ---------- */
+        .camera-watermark {
+            position: fixed;
+            bottom: 130px;
+            right: 10px;
+            z-index: 50;
+            max-width: 210px;
+            color: rgba(225, 225, 225, 0.32);
+            font-size: 11px;
+            line-height: 1.45;
+            text-align: right;
+            pointer-events: none;
+            user-select: none;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+            font-weight: 400;
+        }
+    </style>
 </head>
 <body>
+
+    <!-- ====== 免责声明弹窗（页面加载后最先显示） ====== -->
+    <div id="disclaimer-overlay" class="disclaimer-overlay">
+        <div class="disclaimer-card">
+            <div class="disclaimer-header">
+                <h2 class="disclaimer-title">⚠ 免责声明</h2>
+                <p class="disclaimer-subtitle">请在使用前详阅</p>
+            </div>
+
+            <div class="disclaimer-body">
+                <p class="intro">本项目是一个实验性、娱乐性项目，请在使用前仔细阅读以下内容：</p>
+
+                <h3>一、关于项目内容</h3>
+                <ul>
+                    <li>项目中提到的"某手机厂商"指代华强北杂牌，并非您可能联想到的任何具体企业。</li>
+                    <li>项目未指向任何一家企业的明确产品。</li>
+                    <li>"超级月亮""遥遥领先"等字样均由 AI 直接生成文案，本人未参与审批，不代表本人本意。</li>
+                    <li>上述文字仅为娱乐性文本，并无实际指代。</li>
+                </ul>
+
+                <h3>二、关于排名与印象</h3>
+                <ul>
+                    <li>苹果之外的其他厂商众多，文中"第二"为主观排名，"大厂"为主观印象。</li>
+                    <li>上述表述并无实际量化标准，不代表任何实际厂商的真实情况。</li>
+                </ul>
+
+                <h3>三、关于项目性质</h3>
+                <ul>
+                    <li>本项目完全由 LLM 编写，不存在"个人批判"之意，请在讨论时明鉴。</li>
+                </ul>
+
+                <h3>四、关于维权与分发</h3>
+                <ul>
+                    <li>如您认为本项目对您构成侮辱，可提出 DMCA Takedown 或直接提交 Issue。</li>
+                    <li>若提交 Issue，本人将在评估后确认是否删除仓库。</li>
+                    <li>其他人分发版本所添加的内容与本仓库无关。</li>
+                    <li>本项目为开放下载，本人不对任何分发版本负责，一切以本仓库原始文件为准。</li>
+                </ul>
+            </div>
+
+            <div class="disclaimer-check" id="disclaimer-check-wrapper">
+                <input type="checkbox" id="disclaimer-agree">
+                <label for="disclaimer-agree">我了解，知情项目信息并进入站点</label>
+            </div>
+
+            <div class="disclaimer-buttons">
+                <button class="disclaimer-btn disclaimer-btn-exit" id="btn-exit">退出</button>
+                <button class="disclaimer-btn disclaimer-btn-confirm" id="btn-confirm" disabled>确认进入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== 拒绝进入提示（不可逆） ====== -->
+    <div id="refused-overlay" class="refused-overlay">
+        <div class="refused-text">
+            您已拒绝知情内容<br>概不提供预览
+        </div>
+    </div>
+
     <!-- ====== 电脑端遮罩层（仅 body.desktop-block 时显示） ====== -->
     <div id="desktop-overlay" class="desktop-overlay">
         <div class="desktop-card">
@@ -32,7 +267,7 @@
         <!-- 月亮贴图预览 canvas（覆盖在视频上方，仅月亮模式绘制） -->
         <canvas id="moon-canvas" class="moon-canvas"></canvas>
 
-        <!-- 九宫格构图线（白色细线，透明度 0.5） -->
+        <!-- 九宫格构图线 -->
         <div class="grid-overlay" aria-hidden="true">
             <div class="grid-line grid-vertical v1"></div>
             <div class="grid-line grid-vertical v2"></div>
@@ -40,7 +275,7 @@
             <div class="grid-line grid-horizontal h2"></div>
         </div>
 
-        <!-- 顶部参数栏（硬编码纯文字） -->
+        <!-- 顶部参数栏 -->
         <div class="top-bar">
             <div class="param-item">
                 <span class="param-label">ISO</span>
@@ -56,7 +291,7 @@
             </div>
         </div>
 
-        <!-- 底部控制区：模式切换 + 快门按钮 -->
+        <!-- 底部控制区 -->
         <div class="bottom-bar">
             <div class="mode-switcher" role="tablist">
                 <button class="mode-btn active" data-mode="auto" role="tab">自动模式</button>
@@ -67,14 +302,49 @@
             </button>
         </div>
 
-        <!-- Toast 提示（用于"未检测到月亮"等提示） -->
+        <!-- 水印（纯DOM元素，拍照时只截canvas，此水印不会出现在图片中） -->
+        <div class="camera-watermark">
+            娱乐效果，仅供演示<br>
+            请参照进入站点时的知情信息<br>
+            勿过度解读
+        </div>
+
+        <!-- Toast 提示 -->
         <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
 
-    <!-- 脚本：device-detect 先执行，再加载功能模块，camera.js 最后绑定 -->
+    <!-- 脚本 -->
     <script src="js/device-detect.js"></script>
     <script src="js/sharpen.js"></script>
     <script src="js/moon-mode.js"></script>
     <script src="js/camera.js"></script>
+
+    <!-- ====== 免责声明弹窗逻辑 ====== -->
+    <script>
+    (function () {
+        var checkbox    = document.getElementById('disclaimer-agree');
+        var btnConfirm  = document.getElementById('btn-confirm');
+        var btnExit     = document.getElementById('btn-exit');
+        var overlay     = document.getElementById('disclaimer-overlay');
+        var refused     = document.getElementById('refused-overlay');
+
+        // 复选框状态控制确认按钮是否可点
+        checkbox.addEventListener('change', function () {
+            btnConfirm.disabled = !checkbox.checked;
+        });
+
+        // 确认进入：必须勾选复选框
+        btnConfirm.addEventListener('click', function () {
+            if (!checkbox.checked) return;
+            overlay.classList.add('hidden');
+        });
+
+        // 退出：显示拒绝提示，不可逆
+        btnExit.addEventListener('click', function () {
+            overlay.classList.add('hidden');
+            refused.classList.add('show');
+        });
+    })();
+    </script>
 </body>
 </html>
