@@ -1,350 +1,78 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
-    <title>领先同行相机</title>
-    <link rel="stylesheet" href="css/desktop.css">
-    <link rel="stylesheet" href="css/mobile.css">
-
-    <!-- ====== 免责声明弹窗样式（内联，确保最先渲染） ====== -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目状态通知</title>
     <style>
-        /* ---------- 弹窗遮罩（红白配色，非纯红） ---------- */
-        .disclaimer-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 99999;
+        body {
+            background: #1a1a1a;
+            color: #ccc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex;
-            align-items: center;
             justify-content: center;
-            padding: 16px;
-            box-sizing: border-box;
-            background: linear-gradient(135deg, rgba(183,28,28,0.92), rgba(211,47,47,0.88));
-        }
-        .disclaimer-overlay.hidden { display: none; }
-
-        /* ---------- 弹窗卡片（白色） ---------- */
-        .disclaimer-card {
-            background: #ffffff;
-            border-radius: 14px;
-            width: 100%;
-            max-width: 480px;
-            max-height: 86vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.45);
-            border-top: 5px solid #d32f2f;
-        }
-
-        .disclaimer-header {
-            padding: 18px 20px 10px;
-            text-align: center;
-            border-bottom: 1px solid #ffebee;
-        }
-        .disclaimer-title {
+            align-items: center;
+            min-height: 100vh;
             margin: 0;
-            font-size: 20px;
-            font-weight: 800;
-            color: #d32f2f;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .notice {
+            max-width: 600px;
+            background: #2d2d2d;
+            padding: 40px 35px;
+            border-radius: 12px;
+            border-left: 4px solid #d32f2f;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            text-align: center;
+        }
+        h1 {
+            color: #ef5350;
+            font-size: 22px;
+            margin-top: 0;
             letter-spacing: 1px;
         }
-        .disclaimer-subtitle {
-            margin: 4px 0 0;
-            font-size: 12px;
-            color: #999;
-        }
-
-        .disclaimer-body {
-            padding: 14px 20px;
-            overflow-y: auto;
-            flex: 1;
-            font-size: 13.5px;
-            line-height: 1.75;
-            color: #333;
-        }
-        .disclaimer-body .intro {
-            font-weight: 600;
-            color: #b71c1c;
-            margin: 0 0 10px;
-        }
-        .disclaimer-body h3 {
-            font-size: 13.5px;
-            font-weight: 700;
-            color: #d32f2f;
-            margin: 14px 0 6px;
-            padding-bottom: 3px;
-            border-bottom: 1px dashed #ffcdd2;
-        }
-        .disclaimer-body ul {
-            margin: 0 0 6px;
-            padding-left: 18px;
-        }
-        .disclaimer-body li {
-            margin-bottom: 5px;
-        }
-        .disclaimer-body strong { color: #b71c1c; }
-
-        /* ---------- 复选框区域 ---------- */
-        .disclaimer-check {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            margin: 14px 20px 0;
-            padding: 10px 12px;
-            background: #fff5f5;
-            border: 1px solid #ffcdd2;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .disclaimer-check input {
-            margin-top: 2px;
-            width: 18px;
-            height: 18px;
-            accent-color: #d32f2f;
-            flex-shrink: 0;
-            cursor: pointer;
-        }
-        .disclaimer-check label {
-            font-size: 13.5px;
-            color: #333;
-            cursor: pointer;
-            line-height: 1.5;
-            user-select: none;
-        }
-
-        /* ---------- 按钮区域 ---------- */
-        .disclaimer-buttons {
-            display: flex;
-            gap: 10px;
-            padding: 14px 20px 18px;
-        }
-        .disclaimer-btn {
-            flex: 1;
-            padding: 12px 0;
-            border: none;
-            border-radius: 8px;
+        p {
+            line-height: 1.7;
             font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: opacity .15s, transform .1s;
+            color: #aaa;
+            margin: 16px 0;
         }
-        .disclaimer-btn:active { transform: scale(0.97); }
-        .disclaimer-btn-exit {
-            background: #ffffff;
-            color: #555;
-            border: 1.5px solid #ddd;
+        .small {
+            font-size: 13px;
+            color: #777;
+            border-top: 1px solid #444;
+            padding-top: 20px;
+            margin-top: 25px;
         }
-        .disclaimer-btn-confirm {
+        .status-badge {
+            display: inline-block;
             background: #d32f2f;
             color: #fff;
-        }
-        .disclaimer-btn-confirm:disabled {
-            background: #e0e0e0;
-            color: #aaa;
-            cursor: not-allowed;
-        }
-
-        /* ---------- 拒绝进入遮罩（全屏不可逆） ---------- */
-        .refused-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 99999;
-            background: #1a1a1a;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            box-sizing: border-box;
-        }
-        .refused-overlay.show { display: flex; }
-        .refused-text {
-            color: #ef5350;
-            font-size: 18px;
-            font-weight: 700;
-            text-align: center;
-            line-height: 1.7;
-        }
-
-        /* ---------- 拍照页面水印（DOM元素，不写入canvas） ---------- */
-        .camera-watermark {
-            position: fixed;
-            bottom: 130px;
-            right: 10px;
-            z-index: 50;
-            max-width: 210px;
-            color: rgba(225, 225, 225, 0.32);
-            font-size: 11px;
-            line-height: 1.45;
-            text-align: right;
-            pointer-events: none;
-            user-select: none;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-            font-weight: 400;
+            padding: 4px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
 <body>
-
-    <!-- ====== 免责声明弹窗（页面加载后最先显示） ====== -->
-    <div id="disclaimer-overlay" class="disclaimer-overlay">
-        <div class="disclaimer-card">
-            <div class="disclaimer-header">
-                <h2 class="disclaimer-title">⚠ 免责声明</h2>
-                <p class="disclaimer-subtitle">请在使用前详阅</p>
-            </div>
-
-            <div class="disclaimer-body">
-                <p class="intro">本项目是一个实验性、娱乐性项目，请在使用前仔细阅读以下内容：</p>
-
-                <h3>一、关于项目内容</h3>
-                <ul>
-                    <li>项目中提到的"某手机厂商"指代华强北杂牌，并非您可能联想到的任何具体企业。</li>
-                    <li>项目未指向任何一家企业的明确产品。</li>
-                    <li>"超级月亮""遥遥领先"等字样均由 AI 直接生成文案，本人未参与审批，不代表本人本意。</li>
-                    <li>上述文字仅为娱乐性文本，并无实际指代。</li>
-                </ul>
-
-                <h3>二、关于排名与印象</h3>
-                <ul>
-                    <li>苹果之外的其他厂商众多，文中"第二"为主观排名，"大厂"为主观印象。</li>
-                    <li>上述表述并无实际量化标准，不代表任何实际厂商的真实情况。</li>
-                </ul>
-
-                <h3>三、关于项目性质</h3>
-                <ul>
-                    <li>本项目完全由 LLM 编写，不存在"个人批判"之意，请在讨论时明鉴。</li>
-                </ul>
-
-                <h3>四、关于维权与分发</h3>
-                <ul>
-                    <li>如您认为本项目对您构成侮辱，可提出 DMCA Takedown 或直接提交 Issue。</li>
-                    <li>若提交 Issue，本人将在评估后确认是否删除仓库。</li>
-                    <li>其他人分发版本所添加的内容与本仓库无关。</li>
-                    <li>本项目为开放下载，本人不对任何分发版本负责，一切以本仓库原始文件为准。</li>
-                </ul>
-            </div>
-
-            <div class="disclaimer-check" id="disclaimer-check-wrapper">
-                <input type="checkbox" id="disclaimer-agree">
-                <label for="disclaimer-agree">我了解，知情项目信息并进入站点</label>
-            </div>
-
-            <div class="disclaimer-buttons">
-                <button class="disclaimer-btn disclaimer-btn-exit" id="btn-exit">退出</button>
-                <button class="disclaimer-btn disclaimer-btn-confirm" id="btn-confirm" disabled>确认进入</button>
-            </div>
-        </div>
+    <div class="notice">
+        <div class="status-badge">已应要求移除</div>
+        <h1>关于本项目的说明</h1>
+        <p>
+            本演示页面已根据<strong>DMCA（数字千年版权法）</strong>下发的正式通知要求，由托管平台移除。
+        </p>
+        <p>
+            项目代码已从公开仓库中撤回，相关在线服务已停止。本人尊重并遵守相关法律规定。
+        </p>
+        <p>
+            本项目为个人学习实验，无意侵犯任何第三方权益。如有疑问，请通过平台官方渠道联系。
+        </p>
+        <p class="small">
+            最后更新：2026年8月17日
+        </p>
     </div>
-
-    <!-- ====== 拒绝进入提示（不可逆） ====== -->
-    <div id="refused-overlay" class="refused-overlay">
-        <div class="refused-text">
-            您已拒绝知情内容<br>概不提供预览
-        </div>
-    </div>
-
-    <!-- ====== 电脑端遮罩层（仅 body.desktop-block 时显示） ====== -->
-    <div id="desktop-overlay" class="desktop-overlay">
-        <div class="desktop-card">
-            <svg class="desktop-card-icon" viewBox="0 0 24 24" width="72" height="72" aria-hidden="true">
-                <path fill="#4285F4" d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
-                <circle cx="12" cy="12" r="3.2" fill="#4285F4"/>
-            </svg>
-            <p class="desktop-card-text">由于摄像头支持问题，请在手机端访问</p>
-        </div>
-    </div>
-
-    <!-- ====== 手机端相机界面 ====== -->
-    <div id="camera-app" class="camera-app">
-        <!-- 相机视频流（底层） -->
-        <video id="camera-video" class="camera-video" autoplay playsinline muted></video>
-
-        <!-- 处理用 canvas（隐藏，仅用于截图/锐化/合成） -->
-        <canvas id="process-canvas" class="process-canvas"></canvas>
-
-        <!-- 月亮贴图预览 canvas（覆盖在视频上方，仅月亮模式绘制） -->
-        <canvas id="moon-canvas" class="moon-canvas"></canvas>
-
-        <!-- 九宫格构图线 -->
-        <div class="grid-overlay" aria-hidden="true">
-            <div class="grid-line grid-vertical v1"></div>
-            <div class="grid-line grid-vertical v2"></div>
-            <div class="grid-line grid-horizontal h1"></div>
-            <div class="grid-line grid-horizontal h2"></div>
-        </div>
-
-        <!-- 顶部参数栏 -->
-        <div class="top-bar">
-            <div class="param-item">
-                <span class="param-label">ISO</span>
-                <span class="param-value">Auto</span>
-            </div>
-            <div class="param-item">
-                <span class="param-label">光圈</span>
-                <span class="param-value">f/0.95</span>
-            </div>
-            <div class="param-item">
-                <span class="param-label">大小</span>
-                <span class="param-value">L</span>
-            </div>
-        </div>
-
-        <!-- 底部控制区 -->
-        <div class="bottom-bar">
-            <div class="mode-switcher" role="tablist">
-                <button class="mode-btn active" data-mode="auto" role="tab">自动模式</button>
-                <button class="mode-btn" data-mode="moon" role="tab">超级月亮模式</button>
-            </div>
-            <button id="shutter" class="shutter-btn" aria-label="拍摄">
-                <span class="shutter-inner"></span>
-            </button>
-        </div>
-
-        <!-- 水印（纯DOM元素，拍照时只截canvas，此水印不会出现在图片中） -->
-        <div class="camera-watermark">
-            娱乐效果，仅供演示<br>
-            请参照进入站点时的知情信息<br>
-            勿过度解读
-        </div>
-
-        <!-- Toast 提示 -->
-        <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    </div>
-
-    <!-- 脚本 -->
-    <script src="js/device-detect.js"></script>
-    <script src="js/sharpen.js"></script>
-    <script src="js/moon-mode.js"></script>
-    <script src="js/camera.js"></script>
-
-    <!-- ====== 免责声明弹窗逻辑 ====== -->
-    <script>
-    (function () {
-        var checkbox    = document.getElementById('disclaimer-agree');
-        var btnConfirm  = document.getElementById('btn-confirm');
-        var btnExit     = document.getElementById('btn-exit');
-        var overlay     = document.getElementById('disclaimer-overlay');
-        var refused     = document.getElementById('refused-overlay');
-
-        // 复选框状态控制确认按钮是否可点
-        checkbox.addEventListener('change', function () {
-            btnConfirm.disabled = !checkbox.checked;
-        });
-
-        // 确认进入：必须勾选复选框
-        btnConfirm.addEventListener('click', function () {
-            if (!checkbox.checked) return;
-            overlay.classList.add('hidden');
-        });
-
-        // 退出：显示拒绝提示，不可逆
-        btnExit.addEventListener('click', function () {
-            overlay.classList.add('hidden');
-            refused.classList.add('show');
-        });
-    })();
-    </script>
 </body>
 </html>
